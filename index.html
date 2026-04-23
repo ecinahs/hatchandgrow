@@ -631,10 +631,9 @@ function plantSVG(s){
 function renderResult(){
   const pct=score/TOTAL;
   let rClass,msg,emoji,rc;
-  if(pct===1)      {rClass='score-perfect';msg='Perfect score! Galaxy brain! 🌌';emoji='🏆';rc='#10b981';launchConfetti();}
-  else if(pct>=0.67){rClass='score-good';  msg='Stellar performance! Almost perfect!';emoji='🌟';rc='#a855f7';}
-  else if(pct>=0.5) {rClass='score-ok';   msg='Good effort — keep growing!';emoji='🌱';rc='#f59e0b';}
-  else              {rClass='score-low';   msg="Keep exploring — you\'ll get there!";emoji='🚀';rc='#ef4444';}
+  if(score===6) {rClass='score-perfect';msg=`OMG, are you a genius, ${userName}?!`;      emoji='🧠';rc='#10b981';launchConfetti();}
+  else if(score>=3){rClass='score-good'; msg=`Way to go, you're almost there, ${userName}!`; emoji='🌟';rc='#a855f7';}
+  else              {rClass='score-low';  msg=`Try harder next time, ${userName}!`;           emoji='💪';rc='#ef4444';}
 
   const rp=`${Math.round(pct*360)}deg`;
   const rev=questions.map((q,i)=>`
@@ -655,7 +654,7 @@ function renderResult(){
         <div class="score-ring-inner"><span>${score}/${TOTAL}</span><span class="score-label">Score</span></div>
       </div>
       <h2>${emoji} ${msg}</h2>
-      <p class="result-sub">Great work, <strong>${userName}</strong>! You got <strong>${score} out of ${TOTAL}</strong> correct.</p>
+      <p class="result-sub">You scored <strong>${score} out of ${TOTAL}</strong> correct.</p>
       <div class="saving-msg" id="saving-status">Saving your score to the galaxy log…</div>
       <button class="retry-btn" onclick="init()">🔄 Try Again with New Questions</button>
       <div class="review"><h3>✦ Answer Review</h3>${rev}</div>
