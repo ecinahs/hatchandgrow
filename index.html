@@ -208,6 +208,8 @@
       transform:translateX(3px); box-shadow:0 0 20px rgba(167,139,250,0.15);
     }
     .option-btn:hover:not(:disabled) .opt-label { color:#a78bfa; }
+    .option-btn.selected       { border-color:#a78bfa; background:rgba(167,139,250,0.2); color:#fff; box-shadow:0 0 20px rgba(167,139,250,0.25); transform:translateX(3px); }
+    .option-btn.selected .opt-label { color:#a78bfa; }
     .option-btn.correct        { border-color:#34d399; background:rgba(52,211,153,0.15); color:#a7f3d0; box-shadow:0 0 20px rgba(52,211,153,0.2); }
     .option-btn.correct .opt-label { color:#34d399; }
     .option-btn.wrong          { border-color:#f87171; background:rgba(248,113,113,0.15); color:#fca5a5; box-shadow:0 0 20px rgba(248,113,113,0.2); }
@@ -220,14 +222,22 @@
     .feedback.correct-msg { color:#34d399; }
     .feedback.wrong-msg   { color:#f87171; }
 
-    .next-btn {
-      margin-top:22px; background:linear-gradient(135deg,#7c3aed,#a855f7);
+    .action-btns { display:flex; gap:10px; margin-top:22px; flex-wrap:wrap; }
+    .submit-btn {
+      background:linear-gradient(135deg,#7c3aed,#a855f7);
       color:#fff; border:none; border-radius:14px; padding:14px 32px;
       font-size:0.97rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;
       box-shadow:0 4px 20px rgba(124,58,237,0.4);
       transition:transform 0.15s,box-shadow 0.15s; display:none;
     }
-    .next-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(124,58,237,0.55); }
+    .submit-btn:hover { transform:translateY(-2px); box-shadow:0 8px 25px rgba(124,58,237,0.55); }
+    .next-btn {
+      background:rgba(167,139,250,0.15); border:1.5px solid rgba(167,139,250,0.35);
+      color:#c4b5fd; border-radius:14px; padding:14px 32px;
+      font-size:0.97rem; font-weight:700; cursor:pointer; font-family:'Inter',sans-serif;
+      transition:transform 0.15s,background 0.15s; display:none;
+    }
+    .next-btn:hover { transform:translateY(-2px); background:rgba(167,139,250,0.25); }
 
     /* Result screen */
     .result { text-align:center; }
@@ -455,7 +465,7 @@ const TOTAL=6, LABELS=['A','B','C','D'], TICON={DA:'📊',DG:'🔒',PE:'📋'}, 
 function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; }
 function pick(){ return shuffle([...shuffle(DA_QUESTIONS).slice(0,2),...shuffle(DG_QUESTIONS).slice(0,2),...shuffle(PE_QUESTIONS).slice(0,2)]); }
 
-let questions=[],current=0,score=0,answered=false,results=[],userName="";
+let questions=[],current=0,score=0,answered=false,results=[],userName="",selectedAnswer=null;
 
 function init(){ questions=[];current=0;score=0;answered=false;results=[];userName=""; renderName(); }
 
@@ -500,12 +510,13 @@ function renderName(){
 function startQuiz(){
   userName=document.getElementById('nameInput').value.trim();
   if(!userName)return;
-  questions=pick(); current=0;score=0;answered=false;results=[];
+  questions=pick(); current=0;score=0;answered=false;selectedAnswer=null;results=[];
   renderQ();
 }
 
 function renderQ(){
   const q=questions[current], pct=Math.round((current/TOTAL)*100);
+  selectedAnswer=null;
   document.getElementById('app').innerHTML=`
     <div class="animate">
       <div class="quiz-header">
@@ -519,15 +530,29 @@ function renderQ(){
         ${q.options.map((o,i)=>`<button class="option-btn" onclick="selectAnswer(${i})"><span class="opt-label">${LABELS[i]}</span><span>${o}</span></button>`).join('')}
       </div>
       <div class="feedback" id="feedback"></div>
-      <button class="next-btn" id="next-btn" onclick="nextQ()">${current<TOTAL-1?'Next Question →':'See My Results →'}</button>
+      <div class="action-btns">
+        <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">Submit Answer</button>
+        <button class="next-btn"   id="next-btn"   onclick="nextQ()">${current<TOTAL-1?'Next Question →':'See My Results →'}</button>
+      </div>
     </div>`;
 }
 
 function selectAnswer(chosen){
-  if(answered)return; answered=true;
-  const q=questions[current],correct=q.answer;
+  if(answered)return;
+  selectedAnswer=chosen;
+  document.querySelectorAll('.option-btn').forEach((b,i)=>{
+    b.classList.remove('selected');
+    if(i===chosen) b.classList.add('selected');
+  });
+  document.getElementById('submit-btn').style.display='inline-block';
+}
+
+function submitAnswer(){
+  if(answered||selectedAnswer===null)return;
+  answered=true;
+  const q=questions[current],correct=q.answer,chosen=selectedAnswer;
   const btns=document.querySelectorAll('.option-btn'),fb=document.getElementById('feedback');
-  btns.forEach(b=>b.disabled=true);
+  btns.forEach(b=>{ b.disabled=true; b.classList.remove('selected'); });
   if(chosen===correct){
     btns[chosen].classList.add('correct');
     fb.innerHTML='✅ Correct! Stellar answer!'; fb.className='feedback correct-msg';
@@ -537,10 +562,11 @@ function selectAnswer(chosen){
     fb.innerHTML=`❌ Not quite! Correct: <strong>${LABELS[correct]}) ${q.options[correct]}</strong>`; fb.className='feedback wrong-msg';
     results.push(false);
   }
+  document.getElementById('submit-btn').style.display='none';
   document.getElementById('next-btn').style.display='inline-block';
 }
 
-function nextQ(){ answered=false; current++; if(current<TOTAL)renderQ(); else renderResult(); }
+function nextQ(){ answered=false; selectedAnswer=null; current++; if(current<TOTAL)renderQ(); else renderResult(); }
 
 async function submitScore(){
   try{
