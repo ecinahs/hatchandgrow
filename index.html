@@ -450,7 +450,7 @@ const PE_QUESTIONS = [
   {team:"PE",text:"When developing a Theory of Change, what is the role of 'Intermediate Outcomes'?",options:["They are the unexpected negative side effects of a programme.","They are the physical goods or services delivered directly to the beneficiary.","They represent the internal administrative steps taken by the project team.","They act as the necessary preconditions or behavioral changes required to reach the final impact."],answer:3}
 ];
 
-const TOTAL=6, LABELS=['A','B','C','D'], TICON={DA:'📊',DG:'🔒',PE:'📋'};
+const TOTAL=6, LABELS=['A','B','C','D'], TICON={DA:'📊',DG:'🔒',PE:'📋'}, TNAME={DA:'Data Analytics',DG:'Data Governance',PE:'Programme Evaluation'};
 
 function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; }
 function pick(){ return shuffle([...shuffle(DA_QUESTIONS).slice(0,2),...shuffle(DG_QUESTIONS).slice(0,2),...shuffle(PE_QUESTIONS).slice(0,2)]); }
@@ -513,7 +513,7 @@ function renderQ(){
         <span class="quiz-counter">${current+1} / ${TOTAL}</span>
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
-      <span class="team-badge team-${q.team}">${TICON[q.team]} ${q.team} Team</span>
+      <span class="team-badge team-${q.team}">${TICON[q.team]} ${TNAME[q.team]}</span>
       <div class="q-text">${q.text}</div>
       <div class="options" id="options">
         ${q.options.map((o,i)=>`<button class="option-btn" onclick="selectAnswer(${i})"><span class="opt-label">${LABELS[i]}</span><span>${o}</span></button>`).join('')}
@@ -616,7 +616,7 @@ function renderResult(){
       <div class="review-icon">${results[i]?'✅':'❌'}</div>
       <div>
         <div class="q-label-rv">${q.text.split('\n')[0].slice(0,65)}${q.text.length>65?'…':''}
-          <span class="team-badge team-${q.team}" style="font-size:0.6rem;padding:2px 7px;margin-left:5px;">${q.team}</span>
+          <span class="team-badge team-${q.team}" style="font-size:0.6rem;padding:2px 7px;margin-left:5px;">${TNAME[q.team]}</span>
         </div>
         <div class="correct-a-rv">✓ ${LABELS[q.answer]}) ${q.options[q.answer]}</div>
       </div>
