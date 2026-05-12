@@ -210,6 +210,9 @@
     .option-btn:hover:not(:disabled) .opt-label { color:#fbbf24; }
     .option-btn.selected       { border-color:#fbbf24; background:rgba(251,191,36,0.15); color:#fff; box-shadow:0 0 20px rgba(251,191,36,0.25); transform:translateX(3px); }
     .option-btn.selected .opt-label { color:#fbbf24; }
+    .option-btn.checked        { border-color:#fbbf24; background:rgba(251,191,36,0.15); color:#fff; box-shadow:0 0 20px rgba(251,191,36,0.25); transform:translateX(3px); }
+    .option-btn.checked .opt-label { color:#fbbf24; }
+    .multi-badge { display:inline-block; font-size:0.75rem; font-weight:700; padding:5px 14px; border-radius:99px; margin-bottom:14px; background:rgba(251,191,36,0.15); color:#fcd34d; border:1px solid rgba(251,191,36,0.3); letter-spacing:0.04em; }
     .option-btn.correct        { border-color:#34d399; background:rgba(52,211,153,0.15); color:#a7f3d0; box-shadow:0 0 20px rgba(52,211,153,0.2); }
     .option-btn.correct .opt-label { color:#34d399; }
     .option-btn.wrong          { border-color:#f87171; background:rgba(248,113,113,0.15); color:#fca5a5; box-shadow:0 0 20px rgba(248,113,113,0.2); }
@@ -440,7 +443,8 @@ const DG_QUESTIONS = [
   {team:"DG",text:"Under what circumstances is data classified as Sensitive (Normal)? When the unauthorised disclosure of data results in…",options:["No damage to individual or entity","Sustained financial loss","Some temporary and minor emotional distress","Loss of life"],answer:2},
   {team:"DG",text:"When using public Internet-based Software-as-a-Service (SAAS) or generative AI tools (e.g. Canva, Mentimeter, ChatGPT), what is the highest data classification level you are permitted to use?",options:["Restricted / Sensitive-Normal","Confidential / Sensitive-Normal","Official (Closed) / Non-Sensitive","Secret / Sensitive-High"],answer:2},
   {team:"DG",text:"When can personal data be shared with external parties?",options:["Whenever it's convenient for operations","Only with proper consent or legal basis, and appropriate safeguards","When the external party promises to keep it safe","After removing just the names and contact details"],answer:1},
-  {team:"DG",text:"Before sending sensitive classified information to external vendors, officers should first…",options:["Decide on mode of transfer (e.g. encrypted email, secure file transfer etc)","Create backup copies","Sanitise and declassify content","Implement access and retention controls for the shared data"],answer:2},
+  {team:"DG",text:"What must an officer first do before sharing classified information with external vendors?",options:["Decide on mode of transfer (e.g. encrypted email, secure file transfer etc)","Create backup copies","Ensure there is legal basis, the recipient has security clearance, and the appropriate management approval has been obtained","Implement access and retention controls for the shared data"],answer:2},
+  {team:"DG",text:"Data sharing between public agencies is permitted for which of the following purposes? Select all that applies.",options:["Any purpose that senior management deems appropriate","Authorised or required by legislation (other than PSGA) or Court Order","For specified purposes listed in the PSGA (e.g. including upholding public sector values, securing efficiencies, improving service delivery, and supporting whole-of-government approaches)","Necessary in the public interest","Data subject has given consent"],answer:[1,2,3,4],multiSelect:true},
   {team:"DG",text:"When individuals request access to their personal data, agencies must provide a response within:",options:["14 calendar days","21 calendar days","30 calendar days","60 calendar days"],answer:2},
   {team:"DG",text:"A member of public complains that their address in your system is outdated. This is primarily a problem with which data quality dimension?",options:["Accuracy","Timeliness","Completeness","Integrity"],answer:1},
   {team:"DG",text:"Which data quality dimension would be most affected if your agency's system shows someone's age as 150 years old?",options:["Completeness","Accuracy","Consistency","Timeliness"],answer:1}
@@ -461,7 +465,7 @@ const PE_QUESTIONS = [
   {team:"PE",text:"When developing a Theory of Change, what is the role of 'Intermediate Outcomes'?",options:["They are the unexpected negative side effects of a programme.","They are the physical goods or services delivered directly to the beneficiary.","They represent the internal administrative steps taken by the project team.","They act as the necessary preconditions or behavioral changes required to reach the final impact."],answer:3}
 ];
 
-const TOTAL=6, LABELS=['A','B','C','D'], TICON={DA:'📊',DG:'🔒',PE:'📋'}, TNAME={DA:'Data Analytics',DG:'Data Governance',PE:'Programme Evaluation'};
+const TOTAL=6, LABELS=['A','B','C','D','E'], TICON={DA:'📊',DG:'🔒',PE:'📋'}, TNAME={DA:'Data Analytics',DG:'Data Governance',PE:'Programme Evaluation'};
 
 function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];} return b; }
 function pick(){ return shuffle([...shuffle(DA_QUESTIONS).slice(0,2),...shuffle(DG_QUESTIONS).slice(0,2),...shuffle(PE_QUESTIONS).slice(0,2)]); }
@@ -517,7 +521,7 @@ function startQuiz(){
 
 function renderQ(){
   const q=questions[current], pct=Math.round((current/TOTAL)*100);
-  selectedAnswer=null;
+  selectedAnswer = q.multiSelect ? [] : null;
   document.getElementById('app').innerHTML=`
     <div class="animate">
       <div class="quiz-header">
@@ -526,6 +530,7 @@ function renderQ(){
       </div>
       <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
       <span class="team-badge team-${q.team}">${TICON[q.team]} ${TNAME[q.team]}</span>
+      ${q.multiSelect ? '<div class="multi-badge">☑ Select all that apply</div>' : ''}
       <div class="q-text">${q.text}</div>
       <div class="options" id="options">
         ${q.options.map((o,i)=>`<button class="option-btn" onclick="selectAnswer(${i})"><span class="opt-label">${LABELS[i]}</span><span>${o}</span></button>`).join('')}
@@ -540,28 +545,63 @@ function renderQ(){
 
 function selectAnswer(chosen){
   if(answered)return;
-  selectedAnswer=chosen;
-  document.querySelectorAll('.option-btn').forEach((b,i)=>{
-    b.classList.remove('selected');
-    if(i===chosen) b.classList.add('selected');
-  });
-  document.getElementById('submit-btn').style.display='inline-block';
+  const q=questions[current];
+  if(q.multiSelect){
+    const idx=selectedAnswer.indexOf(chosen);
+    if(idx===-1) selectedAnswer.push(chosen);
+    else selectedAnswer.splice(idx,1);
+    document.querySelectorAll('.option-btn').forEach((b,i)=>{
+      b.classList.remove('checked');
+      if(selectedAnswer.includes(i)) b.classList.add('checked');
+    });
+    document.getElementById('submit-btn').style.display=selectedAnswer.length>0?'inline-block':'none';
+  } else {
+    selectedAnswer=chosen;
+    document.querySelectorAll('.option-btn').forEach((b,i)=>{
+      b.classList.remove('selected');
+      if(i===chosen) b.classList.add('selected');
+    });
+    document.getElementById('submit-btn').style.display='inline-block';
+  }
 }
 
 function submitAnswer(){
-  if(answered||selectedAnswer===null)return;
-  answered=true;
-  const q=questions[current],correct=q.answer,chosen=selectedAnswer;
-  const btns=document.querySelectorAll('.option-btn'),fb=document.getElementById('feedback');
-  btns.forEach(b=>{ b.disabled=true; b.classList.remove('selected'); });
-  if(chosen===correct){
-    btns[chosen].classList.add('correct');
-    fb.innerHTML='✅ Correct! Stellar answer!'; fb.className='feedback correct-msg';
-    score++; results.push(true);
+  const q=questions[current];
+  if(q.multiSelect){
+    if(answered||selectedAnswer.length===0)return;
   } else {
-    btns[chosen].classList.add('wrong'); btns[correct].classList.add('reveal-correct');
-    fb.innerHTML=`❌ Not quite! Correct: <strong>${LABELS[correct]}) ${q.options[correct]}</strong>`; fb.className='feedback wrong-msg';
-    results.push(false);
+    if(answered||selectedAnswer===null)return;
+  }
+  answered=true;
+  const correct=q.answer,chosen=selectedAnswer;
+  const btns=document.querySelectorAll('.option-btn'),fb=document.getElementById('feedback');
+  if(q.multiSelect){
+    const sortedChosen=[...chosen].sort((a,b)=>a-b);
+    const sortedCorrect=[...correct].sort((a,b)=>a-b);
+    const isCorrect=sortedChosen.length===sortedCorrect.length&&sortedChosen.every((v,i)=>v===sortedCorrect[i]);
+    btns.forEach(b=>{ b.disabled=true; b.classList.remove('checked'); });
+    if(isCorrect){
+      sortedCorrect.forEach(i=>btns[i].classList.add('correct'));
+      fb.innerHTML='✅ Correct! Stellar answer!'; fb.className='feedback correct-msg';
+      score++; results.push(true);
+    } else {
+      sortedChosen.forEach(i=>btns[i].classList.add('wrong'));
+      sortedCorrect.forEach(i=>btns[i].classList.add('reveal-correct'));
+      const correctLabels=sortedCorrect.map(i=>`${LABELS[i]}) ${q.options[i]}`).join(', ');
+      fb.innerHTML=`❌ Not quite! Correct: <strong>${correctLabels}</strong>`; fb.className='feedback wrong-msg';
+      results.push(false);
+    }
+  } else {
+    btns.forEach(b=>{ b.disabled=true; b.classList.remove('selected'); });
+    if(chosen===correct){
+      btns[chosen].classList.add('correct');
+      fb.innerHTML='✅ Correct! Stellar answer!'; fb.className='feedback correct-msg';
+      score++; results.push(true);
+    } else {
+      btns[chosen].classList.add('wrong'); btns[correct].classList.add('reveal-correct');
+      fb.innerHTML=`❌ Not quite! Correct: <strong>${LABELS[correct]}) ${q.options[correct]}</strong>`; fb.className='feedback wrong-msg';
+      results.push(false);
+    }
   }
   document.getElementById('submit-btn').style.display='none';
   document.getElementById('next-btn').style.display='inline-block';
