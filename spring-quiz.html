@@ -552,7 +552,6 @@ function renderQ(){
         <button class="tf-btn true-btn"  id="btn-true"  onclick="selectAnswer(true)">✓ &nbsp;TRUE</button>
         <button class="tf-btn false-btn" id="btn-false" onclick="selectAnswer(false)">✗ &nbsp;FALSE</button>
       </div>
-      <div class="feedback" id="feedback"></div>
       <div class="action-btns">
         <button class="next-btn" id="next-btn" onclick="nextQ()">${current < TOTAL-1 ? 'Next Question →' : 'See My Results →'}</button>
       </div>
@@ -574,15 +573,11 @@ function selectAnswer(chosen){
 
   if(isCorrect){
     (chosen ? btnTrue : btnFalse).classList.add('correct');
-    fb.innerHTML = '🎉 Yay, you got it right!';
-    fb.className = 'feedback correct-msg';
     score++;
     results.push(true);
   } else {
     (chosen  ? btnTrue  : btnFalse).classList.add('wrong');
     (!chosen ? btnTrue  : btnFalse).classList.add('reveal');
-    fb.innerHTML = `❌ Wrong, try again!`;
-    fb.className = 'feedback wrong-msg';
     results.push(false);
   }
 
