@@ -272,6 +272,59 @@
 
     .footer { margin-top: 16px; font-size: 0.72rem; color: #74c69d; text-align: center; z-index: 10; position: relative; letter-spacing: 0.1em; font-weight: 700; }
     #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+
+    /* ── Admin button ──────────────────────────────────────────────────────── */
+    #admin-btn {
+      position: fixed; bottom: 22px; right: 22px; z-index: 20;
+      background: rgba(255,255,255,0.82); border: 1.5px solid #95d5b2;
+      border-radius: 99px; padding: 8px 14px 8px 10px;
+      font-family: 'Nunito', sans-serif; font-size: 0.72rem; font-weight: 800;
+      color: #2d6a4f; cursor: pointer; display: flex; align-items: center; gap: 5px;
+      box-shadow: 0 4px 14px rgba(45,106,79,0.15);
+      transition: all 0.2s; backdrop-filter: blur(8px);
+    }
+    #admin-btn:hover { background: #d8f3dc; box-shadow: 0 6px 18px rgba(45,106,79,0.25); transform: translateY(-2px); }
+
+    /* ── Admin password page ───────────────────────────────────────────────── */
+    .admin-lock { text-align: center; margin-bottom: 24px; }
+    .admin-lock .lock-icon { font-size: 3rem; display: block; margin-bottom: 10px; }
+    .admin-lock h2 { font-size: 1.4rem; font-weight: 900; color: #1b4332; margin-bottom: 6px; }
+    .admin-lock p  { font-size: 0.88rem; color: #52b788; font-weight: 600; }
+    .admin-err { color: #dc2626; font-size: 0.85rem; font-weight: 700; margin-top: 10px; min-height: 20px; text-align: center; }
+
+    /* ── Admin dashboard table ─────────────────────────────────────────────── */
+    .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .admin-header h2 { font-size: 1.2rem; font-weight: 900; color: #1b4332; }
+    .admin-back {
+      background: #d8f3dc; border: 1.5px solid #95d5b2; border-radius: 99px;
+      padding: 6px 14px; font-size: 0.78rem; font-weight: 800; color: #2d6a4f;
+      cursor: pointer; font-family: 'Nunito', sans-serif; transition: all 0.15s;
+    }
+    .admin-back:hover { background: #b7e4c7; }
+    .admin-stats { display: flex; gap: 10px; margin-bottom: 18px; }
+    .stat-pill {
+      flex: 1; background: linear-gradient(135deg, #d8f3dc, #b7e4c7);
+      border: 1.5px solid #95d5b2; border-radius: 14px; padding: 12px;
+      text-align: center;
+    }
+    .stat-pill .stat-num { font-size: 1.6rem; font-weight: 900; color: #1b4332; }
+    .stat-pill .stat-lbl { font-size: 0.7rem; font-weight: 700; color: #52b788; text-transform: uppercase; letter-spacing: 0.08em; }
+    .admin-table-wrap { overflow-x: auto; border-radius: 14px; border: 1.5px solid #b7e4c7; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th { background: #40916c; color: #fff; padding: 11px 14px; text-align: left; font-size: 0.78rem; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; }
+    thead th:first-child { border-radius: 12px 0 0 0; }
+    thead th:last-child  { border-radius: 0 12px 0 0; }
+    tbody tr { border-bottom: 1px solid #d8f3dc; transition: background 0.15s; }
+    tbody tr:last-child  { border-bottom: none; }
+    tbody tr:hover { background: #f0fce4; }
+    tbody td { padding: 10px 14px; color: #1b4332; font-weight: 600; }
+    .score-badge {
+      display: inline-block; padding: 3px 10px; border-radius: 99px;
+      font-weight: 800; font-size: 0.82rem;
+    }
+    .score-perfect { background: #d8f3dc; color: #1b4332; }
+    .score-partial  { background: #fef9c3; color: #92400e; }
+    .score-low      { background: #fee2e2; color: #991b1b; }
   </style>
 </head>
 <body>
@@ -379,6 +432,8 @@
 
 <div class="card" id="app"></div>
 <div class="footer">🌼 &nbsp; DataUp Challenge &nbsp; 🌼</div>
+
+<button id="admin-btn" onclick="renderAdminLogin()">🌸 For Admins Only</button>
 
 <script>
 // ── Supabase ─────────────────────────────────────────────────────────────────
@@ -596,6 +651,84 @@ function renderResult(){
       <button class="retry-btn" onclick="init()">🔄 Try Again</button>
     </div>`;
   submitScore();
+}
+
+// ── Admin ─────────────────────────────────────────────────────────────────
+function renderAdminLogin(){
+  document.getElementById('app').innerHTML = `
+    <div class="animate">
+      <div class="admin-lock">
+        <span class="lock-icon">🔐</span>
+        <h2>Admin Access</h2>
+        <p>Enter the password to view results.</p>
+      </div>
+      <div class="input-wrap">
+        <label for="pwInput">🌿 Password</label>
+        <input id="pwInput" type="password" placeholder="Enter password" autocomplete="off"
+          onkeydown="if(event.key==='Enter') checkAdminPassword()"/>
+      </div>
+      <button class="start-btn" onclick="checkAdminPassword()">🔓 Enter</button>
+      <div class="admin-err" id="pw-err"></div>
+      <div style="text-align:center;margin-top:16px;">
+        <button class="admin-back" onclick="init()">← Back to Quiz</button>
+      </div>
+    </div>`;
+  document.getElementById('pwInput').focus();
+}
+
+function checkAdminPassword(){
+  const val = document.getElementById('pwInput').value;
+  if(val === 'dtorocks'){
+    renderAdminDashboard();
+  } else {
+    document.getElementById('pw-err').textContent = '❌ Incorrect password. Try again.';
+  }
+}
+
+async function renderAdminDashboard(){
+  document.getElementById('app').innerHTML = `<div class="animate" style="text-align:center;padding:20px;color:#52b788;font-weight:700;">🌿 Loading results…</div>`;
+  try {
+    const res = await fetch(SUPABASE_URL + "/rest/v1/dataup_swag_scores?select=name,created_at,score&order=created_at.desc", {
+      headers: { "apikey": SUPABASE_KEY, "Authorization": "Bearer " + SUPABASE_KEY }
+    });
+    const rows = await res.json();
+    const total = rows.length;
+    const perfect = rows.filter(r => r.score === 6).length;
+    const avg = total ? (rows.reduce((s,r)=>s+r.score,0)/total).toFixed(1) : '—';
+
+    const tableRows = rows.map(r => {
+      const dt = new Date(r.created_at);
+      const ts = dt.toLocaleDateString('en-SG',{day:'2-digit',month:'short',year:'numeric'}) + ' ' +
+                 dt.toLocaleTimeString('en-SG',{hour:'2-digit',minute:'2-digit'});
+      const cls = r.score === 6 ? 'score-perfect' : r.score >= 4 ? 'score-partial' : 'score-low';
+      return `<tr>
+        <td>${r.name}</td>
+        <td>${ts}</td>
+        <td><span class="score-badge ${cls}">${r.score} / 6</span></td>
+      </tr>`;
+    }).join('');
+
+    document.getElementById('app').innerHTML = `
+      <div class="animate">
+        <div class="admin-header">
+          <h2>📊 Quiz Results</h2>
+          <button class="admin-back" onclick="init()">← Back</button>
+        </div>
+        <div class="admin-stats">
+          <div class="stat-pill"><div class="stat-num">${total}</div><div class="stat-lbl">Players</div></div>
+          <div class="stat-pill"><div class="stat-num">${perfect}</div><div class="stat-lbl">Perfect 6/6</div></div>
+          <div class="stat-pill"><div class="stat-num">${avg}</div><div class="stat-lbl">Avg Score</div></div>
+        </div>
+        <div class="admin-table-wrap">
+          <table>
+            <thead><tr><th>Name</th><th>Time</th><th>Score</th></tr></thead>
+            <tbody>${tableRows || '<tr><td colspan="3" style="text-align:center;color:#95d5b2;padding:20px;">No results yet.</td></tr>'}</tbody>
+          </table>
+        </div>
+      </div>`;
+  } catch(e) {
+    document.getElementById('app').innerHTML = `<div style="text-align:center;color:#dc2626;font-weight:700;padding:20px;">❌ Failed to load results. Check connection.</div>`;
+  }
 }
 
 init();
