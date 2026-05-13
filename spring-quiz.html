@@ -526,7 +526,7 @@ function selectAnswer(chosen){
   } else {
     (chosen  ? btnTrue  : btnFalse).classList.add('wrong');
     (!chosen ? btnTrue  : btnFalse).classList.add('reveal');
-    fb.innerHTML = `❌ Wrong, try again next round! The answer was <strong>${q.answer ? 'TRUE' : 'FALSE'}</strong>.`;
+    fb.innerHTML = `❌ Wrong, try again!`;
     fb.className = 'feedback wrong-msg';
     results.push(false);
   }
@@ -568,16 +568,6 @@ function renderResult(){
   else               { rClass='score-low';     msg=`Keep learning, ${userName}! You'll bloom! 🌼`; emoji='🐣'; rc='#ef4444'; }
 
   const rp = `${Math.round(pct*360)}deg`;
-  const rev = QUESTIONS.map((q,i) => `
-    <div class="review-item ${results[i]?'correct-item':'wrong-item'}">
-      <div class="review-icon">${results[i]?'✅':'❌'}</div>
-      <div>
-        <div class="q-label-rv">${q.text.slice(0,90)}${q.text.length>90?'…':''}
-          <span class="team-badge" style="font-size:0.6rem;padding:2px 8px;margin-left:5px;">${q.team}</span>
-        </div>
-        <div class="correct-a-rv">✓ ${q.answer ? 'TRUE' : 'FALSE'}</div>
-      </div>
-    </div>`).join('');
 
   document.getElementById('app').innerHTML = `
     <div class="animate result">
@@ -604,8 +594,6 @@ function renderResult(){
         <div style="font-size:0.85rem;font-weight:700;color:#b91c1c;margin-top:4px;">Score 6/6 to redeem your swag!</div>
       </div>`}
       <button class="retry-btn" onclick="init()">🔄 Try Again</button>
-      <div class="review"><h3>✦ Answer Review</h3>${rev}</div>
-      <button class="retry-btn" style="margin-top:8px;" onclick="init()">🔄 Play Again</button>
     </div>`;
   submitScore();
 }
