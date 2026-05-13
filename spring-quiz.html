@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataUp Swag Quiz</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Nunito', sans-serif;
+      min-height: 100vh;
+      background: linear-gradient(180deg, #e0f7ff 0%, #c8f0c8 40%, #f0fce4 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── Nature decorations ─────────────────────────────────────────────── */
+    .sky-sun {
+      position: fixed; top: -40px; right: -40px;
+      width: 180px; height: 180px; border-radius: 50%;
+      background: radial-gradient(circle, #ffe066 0%, #ffb800 60%, transparent 70%);
+      box-shadow: 0 0 60px 20px rgba(255,200,0,0.25);
+      z-index: 0; pointer-events: none;
+      animation: sun-pulse 6s ease-in-out infinite;
+    }
+    @keyframes sun-pulse { 0%,100%{opacity:0.85;transform:scale(1);} 50%{opacity:1;transform:scale(1.06);} }
+
+    .cloud {
+      position: fixed; z-index: 0; pointer-events: none;
+      opacity: 0.7;
+      animation: cloud-drift linear infinite;
+    }
+    .cloud svg ellipse { fill: #fff; }
+
+    .flower {
+      position: fixed; z-index: 1; pointer-events: none;
+      animation: flower-sway 4s ease-in-out infinite;
+      transform-origin: bottom center;
+    }
+    @keyframes flower-sway {
+      0%,100%{transform:rotate(-5deg);}
+      50%{transform:rotate(5deg);}
+    }
+
+    .butterfly {
+      position: fixed; z-index: 2; pointer-events: none;
+      animation: butterfly-fly linear infinite;
+    }
+    @keyframes butterfly-fly {
+      0%  { transform: translate(0,0)      rotate(0deg); }
+      25% { transform: translate(40px,-30px) rotate(8deg); }
+      50% { transform: translate(80px,0)   rotate(-5deg); }
+      75% { transform: translate(40px,25px)  rotate(6deg); }
+      100%{ transform: translate(0,0)      rotate(0deg); }
+    }
+
+    .grass-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      height: 60px; z-index: 1; pointer-events: none;
+    }
+
+    /* ── Branding ────────────────────────────────────────────────────────── */
+    .branding {
+      text-align: center; margin-bottom: 20px;
+      z-index: 10; position: relative;
+    }
+    .branding-title {
+      font-size: 2rem; font-weight: 900; color: #2d6a4f;
+      text-shadow: 0 2px 8px rgba(45,106,79,0.15);
+    }
+    .branding-title .glow { color: #40916c; }
+    .branding-sub {
+      font-size: 0.8rem; color: #52b788; margin-top: 6px;
+      letter-spacing: 0.12em; text-transform: uppercase; font-weight: 700;
+    }
+
+    /* ── Card ────────────────────────────────────────────────────────────── */
+    .card {
+      background: rgba(255,255,255,0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 2px solid rgba(144,238,144,0.5);
+      border-radius: 28px;
+      box-shadow: 0 20px 60px rgba(45,106,79,0.12), 0 4px 20px rgba(144,238,144,0.2);
+      max-width: 660px; width: 100%;
+      padding: 40px 44px;
+      position: relative; z-index: 10;
+      animation: card-in 0.5s cubic-bezier(0.16,1,0.3,1);
+    }
+    @keyframes card-in {
+      from { opacity:0; transform:translateY(40px) scale(0.96); }
+      to   { opacity:1; transform:translateY(0)    scale(1); }
+    }
+    @keyframes fade-up {
+      from { opacity:0; transform:translateY(16px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .animate { animation: fade-up 0.4s cubic-bezier(0.16,1,0.3,1); }
+
+    /* ── Name / login screen ────────────────────────────────────────────── */
+    .name-hero { text-align: center; margin-bottom: 28px; }
+    .name-hero .hero-icon { font-size: 4rem; display: block; margin-bottom: 12px; animation: hero-bob 3s ease-in-out infinite; }
+    @keyframes hero-bob { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-10px);} }
+    .name-hero h2 { font-size: 1.7rem; font-weight: 900; color: #2d6a4f; margin-bottom: 8px; }
+    .name-hero p  { color: #74c69d; font-size: 0.95rem; font-weight: 600; }
+
+    .input-wrap { margin-bottom: 20px; }
+    .input-wrap label { display: block; font-weight: 700; color: #2d6a4f; margin-bottom: 8px; font-size: 0.9rem; }
+    .input-wrap input {
+      width: 100%; padding: 14px 18px;
+      background: #f0fce4;
+      border: 2px solid #b7e4c7; border-radius: 14px;
+      font-size: 1rem; color: #1b4332; font-family: 'Nunito', sans-serif;
+      outline: none; transition: all 0.2s;
+    }
+    .input-wrap input::placeholder { color: #95d5b2; }
+    .input-wrap input:focus {
+      border-color: #40916c; background: #d8f3dc;
+      box-shadow: 0 0 0 4px rgba(64,145,108,0.15);
+    }
+
+    .start-btn {
+      width: 100%; padding: 16px;
+      background: linear-gradient(135deg, #40916c, #52b788, #74c69d);
+      color: #fff; border: none; border-radius: 14px;
+      font-size: 1rem; font-weight: 800; cursor: pointer;
+      font-family: 'Nunito', sans-serif; letter-spacing: 0.02em;
+      box-shadow: 0 6px 24px rgba(64,145,108,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .start-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(64,145,108,0.5); }
+    .start-btn:disabled { background: #b7e4c7; box-shadow: none; cursor: not-allowed; color: #95d5b2; }
+
+    /* ── Quiz screen ────────────────────────────────────────────────────── */
+    .quiz-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+    .quiz-title  { font-size: 0.9rem; font-weight: 800; color: #40916c; }
+    .quiz-counter {
+      font-size: 0.82rem; color: #fff; font-weight: 700;
+      background: #52b788; padding: 4px 14px;
+      border-radius: 99px;
+    }
+    .progress-bar-wrap { background: #d8f3dc; border-radius: 99px; height: 8px; margin-bottom: 26px; overflow: hidden; }
+    .progress-bar-fill {
+      height: 100%; border-radius: 99px;
+      background: linear-gradient(90deg, #40916c, #74c69d, #b7e4c7);
+      transition: width 0.5s cubic-bezier(0.16,1,0.3,1);
+      box-shadow: 0 0 8px rgba(64,145,108,0.4);
+    }
+
+    .team-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.75rem; font-weight: 800;
+      padding: 5px 14px; border-radius: 99px; margin-bottom: 14px;
+      letter-spacing: 0.04em; text-transform: uppercase;
+      background: #d8f3dc; color: #2d6a4f;
+      border: 1.5px solid #95d5b2;
+    }
+
+    .q-text {
+      font-size: 1.08rem; color: #1b4332; line-height: 1.7;
+      margin-bottom: 28px; font-weight: 700;
+    }
+
+    /* ── True / False buttons ───────────────────────────────────────────── */
+    .tf-options { display: flex; gap: 14px; }
+    .tf-btn {
+      flex: 1; padding: 20px 10px;
+      border-radius: 18px; border: 2.5px solid transparent;
+      font-size: 1.15rem; font-weight: 900; cursor: pointer;
+      font-family: 'Nunito', sans-serif; text-align: center;
+      transition: all 0.2s; letter-spacing: 0.06em;
+    }
+    .tf-btn.true-btn {
+      background: #d8f3dc; color: #1b4332; border-color: #95d5b2;
+    }
+    .tf-btn.false-btn {
+      background: #ffe5e5; color: #7f1d1d; border-color: #fca5a5;
+    }
+    .tf-btn:hover:not(:disabled) { transform: translateY(-4px); }
+    .tf-btn.true-btn:hover:not(:disabled)  { background: #b7e4c7; border-color: #40916c; box-shadow: 0 8px 20px rgba(64,145,108,0.25); }
+    .tf-btn.false-btn:hover:not(:disabled) { background: #fecaca; border-color: #ef4444; box-shadow: 0 8px 20px rgba(239,68,68,0.2); }
+
+    .tf-btn.selected-true  { background: #b7e4c7; border-color: #40916c; transform: translateY(-4px); box-shadow: 0 8px 20px rgba(64,145,108,0.3); }
+    .tf-btn.selected-false { background: #fecaca; border-color: #ef4444; transform: translateY(-4px); box-shadow: 0 8px 20px rgba(239,68,68,0.2); }
+
+    .tf-btn.correct { background: #b7e4c7; border-color: #2d6a4f; color: #1b4332; animation: pop 0.4s ease; box-shadow: 0 0 20px rgba(45,106,79,0.3); }
+    .tf-btn.wrong   { background: #fca5a5; border-color: #dc2626; color: #7f1d1d; }
+    .tf-btn.reveal  { background: #b7e4c7; border-color: #2d6a4f; color: #1b4332; animation: pop 0.4s ease; box-shadow: 0 0 20px rgba(45,106,79,0.3); }
+    @keyframes pop { 0%{transform:scale(1)} 50%{transform:scale(1.05)} 100%{transform:scale(1)} }
+
+    /* ── Feedback + answer reveal ───────────────────────────────────────── */
+    .feedback { margin-top: 18px; font-size: 0.95rem; font-weight: 700; min-height: 22px; }
+    .feedback.correct-msg { color: #2d6a4f; }
+    .feedback.wrong-msg   { color: #dc2626; }
+
+    .answer-reveal {
+      margin-top: 14px; padding: 16px 18px;
+      background: linear-gradient(135deg, #d8f3dc, #b7e4c7);
+      border: 2px solid #74c69d; border-radius: 16px;
+      font-size: 0.9rem; color: #1b4332; line-height: 1.6; font-weight: 600;
+    }
+    .answer-reveal .reveal-label {
+      font-size: 0.72rem; font-weight: 800; letter-spacing: 0.1em;
+      text-transform: uppercase; color: #40916c; margin-bottom: 6px; display: block;
+    }
+
+    .action-btns { display: flex; gap: 10px; margin-top: 22px; }
+    .next-btn {
+      background: linear-gradient(135deg, #40916c, #52b788);
+      color: #fff; border: none; border-radius: 14px; padding: 14px 32px;
+      font-size: 0.97rem; font-weight: 800; cursor: pointer;
+      font-family: 'Nunito', sans-serif; letter-spacing: 0.02em;
+      transition: transform 0.15s, box-shadow 0.15s; display: none;
+      box-shadow: 0 6px 20px rgba(64,145,108,0.35);
+    }
+    .next-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(64,145,108,0.45); }
+
+    /* ── Result screen ───────────────────────────────────────────────────── */
+    .result { text-align: center; }
+
+    .score-ring {
+      width: 140px; height: 140px; border-radius: 50%;
+      margin: 0 auto 20px; position: relative;
+      animation: ring-pop 0.6s cubic-bezier(0.16,1,0.3,1);
+    }
+    .score-ring::before {
+      content: ''; position: absolute; inset: -5px; border-radius: 50%;
+      background: conic-gradient(var(--rc) var(--rp), #d8f3dc 0);
+      z-index: -1;
+    }
+    .score-ring-inner {
+      width: 100%; height: 100%; border-radius: 50%;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      font-size: 2.6rem; font-weight: 900; color: #fff;
+    }
+    .score-label { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; opacity: 0.9; text-transform: uppercase; }
+    @keyframes ring-pop { 0%{transform:scale(0.4);opacity:0} 70%{transform:scale(1.1)} 100%{transform:scale(1);opacity:1} }
+
+    .score-perfect .score-ring-inner { background: linear-gradient(135deg, #2d6a4f, #40916c); box-shadow: 0 0 40px rgba(64,145,108,0.5); }
+    .score-good    .score-ring-inner { background: linear-gradient(135deg, #0d9488, #14b8a6); box-shadow: 0 0 40px rgba(20,184,166,0.5); }
+    .score-ok      .score-ring-inner { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 0 40px rgba(245,158,11,0.5); }
+    .score-low     .score-ring-inner { background: linear-gradient(135deg, #dc2626, #ef4444); box-shadow: 0 0 40px rgba(239,68,68,0.5); }
+
+    .result h2       { font-size: 1.5rem; font-weight: 900; color: #1b4332; margin-bottom: 8px; }
+    .result-sub      { color: #52b788; margin-bottom: 24px; font-size: 0.98rem; font-weight: 700; }
+    .result-sub strong { color: #2d6a4f; }
+
+    .review    { text-align: left; margin-top: 8px; }
+    .review h3 { font-size: 0.78rem; font-weight: 800; color: #52b788; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
+    .review-item { border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; font-size: 0.88rem; line-height: 1.55; display: flex; gap: 12px; align-items: flex-start; }
+    .review-item.correct-item { background: #d8f3dc; border: 1.5px solid #95d5b2; }
+    .review-item.wrong-item   { background: #fff0f0; border: 1.5px solid #fca5a5; }
+    .review-icon  { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .q-label-rv   { font-weight: 700; color: #1b4332; margin-bottom: 4px; font-size: 0.87rem; }
+    .correct-a-rv { color: #2d6a4f; font-weight: 800; font-size: 0.85rem; }
+
+    .retry-btn {
+      background: linear-gradient(135deg, #40916c, #52b788); color: #fff; border: none;
+      border-radius: 14px; padding: 14px 36px; font-size: 0.97rem; font-weight: 800;
+      cursor: pointer; font-family: 'Nunito', sans-serif; letter-spacing: 0.02em;
+      box-shadow: 0 6px 20px rgba(64,145,108,0.35);
+      transition: transform 0.15s, box-shadow 0.15s; margin-bottom: 24px;
+    }
+    .retry-btn:hover { transform: translateY(-2px); box-shadow: 0 10px 28px rgba(64,145,108,0.5); }
+
+    .footer { margin-top: 16px; font-size: 0.72rem; color: #74c69d; text-align: center; z-index: 10; position: relative; letter-spacing: 0.1em; font-weight: 700; }
+    #confetti-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 999; }
+  </style>
+</head>
+<body>
+
+<canvas id="confetti-canvas"></canvas>
+
+<!-- Sun -->
+<div class="sky-sun"></div>
+
+<!-- Clouds -->
+<svg class="cloud" style="top:6%;left:-200px;animation-duration:60s;animation-delay:0s;" width="200" height="80" viewBox="0 0 200 80">
+  <ellipse cx="100" cy="55" rx="90" ry="30" fill="#fff" opacity="0.9"/>
+  <ellipse cx="70"  cy="45" rx="50" ry="28" fill="#fff" opacity="0.9"/>
+  <ellipse cx="130" cy="42" rx="45" ry="25" fill="#fff" opacity="0.9"/>
+  <ellipse cx="100" cy="35" rx="38" ry="22" fill="#fff" opacity="0.9"/>
+</svg>
+<svg class="cloud" style="top:12%;left:-280px;animation-duration:80s;animation-delay:-30s;" width="160" height="60" viewBox="0 0 160 60">
+  <ellipse cx="80"  cy="42" rx="70" ry="22" fill="#fff" opacity="0.7"/>
+  <ellipse cx="55"  cy="34" rx="38" ry="20" fill="#fff" opacity="0.7"/>
+  <ellipse cx="108" cy="32" rx="36" ry="18" fill="#fff" opacity="0.7"/>
+</svg>
+
+<style>
+  @keyframes cloud-drift { from{transform:translateX(0);} to{transform:translateX(calc(100vw + 300px));} }
+</style>
+
+<!-- Flowers left -->
+<div class="flower" style="bottom:55px;left:2%;animation-delay:0s;">
+  <svg width="48" height="90" viewBox="0 0 48 90">
+    <line x1="24" y1="90" x2="24" y2="36" stroke="#40916c" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="24" cy="20" rx="10" ry="10" fill="#f9a8d4"/>
+    <ellipse cx="14" cy="20" rx="7"  ry="5"  fill="#fda4af" opacity="0.8" transform="rotate(-30 14 20)"/>
+    <ellipse cx="34" cy="20" rx="7"  ry="5"  fill="#fda4af" opacity="0.8" transform="rotate(30 34 20)"/>
+    <ellipse cx="24" cy="10" rx="5"  ry="7"  fill="#fda4af" opacity="0.8"/>
+    <ellipse cx="24" cy="30" rx="5"  ry="7"  fill="#fda4af" opacity="0.8"/>
+    <circle  cx="24" cy="20" r="5"   fill="#fbbf24"/>
+  </svg>
+</div>
+<div class="flower" style="bottom:55px;left:7%;animation-delay:-1.5s;transform:scale(0.7);">
+  <svg width="48" height="90" viewBox="0 0 48 90">
+    <line x1="24" y1="90" x2="24" y2="36" stroke="#52b788" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="24" cy="20" rx="10" ry="10" fill="#bfdbfe"/>
+    <ellipse cx="14" cy="20" rx="7"  ry="5"  fill="#93c5fd" opacity="0.8" transform="rotate(-30 14 20)"/>
+    <ellipse cx="34" cy="20" rx="7"  ry="5"  fill="#93c5fd" opacity="0.8" transform="rotate(30 34 20)"/>
+    <ellipse cx="24" cy="10" rx="5"  ry="7"  fill="#93c5fd" opacity="0.8"/>
+    <ellipse cx="24" cy="30" rx="5"  ry="7"  fill="#93c5fd" opacity="0.8"/>
+    <circle  cx="24" cy="20" r="5"   fill="#fbbf24"/>
+  </svg>
+</div>
+
+<!-- Flowers right -->
+<div class="flower" style="bottom:55px;right:3%;animation-delay:-2s;">
+  <svg width="48" height="90" viewBox="0 0 48 90">
+    <line x1="24" y1="90" x2="24" y2="36" stroke="#40916c" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="24" cy="20" rx="10" ry="10" fill="#fde68a"/>
+    <ellipse cx="14" cy="20" rx="7"  ry="5"  fill="#fcd34d" opacity="0.8" transform="rotate(-30 14 20)"/>
+    <ellipse cx="34" cy="20" rx="7"  ry="5"  fill="#fcd34d" opacity="0.8" transform="rotate(30 34 20)"/>
+    <ellipse cx="24" cy="10" rx="5"  ry="7"  fill="#fcd34d" opacity="0.8"/>
+    <ellipse cx="24" cy="30" rx="5"  ry="7"  fill="#fcd34d" opacity="0.8"/>
+    <circle  cx="24" cy="20" r="5"   fill="#f97316"/>
+  </svg>
+</div>
+<div class="flower" style="bottom:55px;right:8%;animation-delay:-0.5s;transform:scale(0.75);">
+  <svg width="48" height="90" viewBox="0 0 48 90">
+    <line x1="24" y1="90" x2="24" y2="36" stroke="#52b788" stroke-width="3" stroke-linecap="round"/>
+    <ellipse cx="24" cy="20" rx="10" ry="10" fill="#d9f99d"/>
+    <ellipse cx="14" cy="20" rx="7"  ry="5"  fill="#bbf7d0" opacity="0.8" transform="rotate(-30 14 20)"/>
+    <ellipse cx="34" cy="20" rx="7"  ry="5"  fill="#bbf7d0" opacity="0.8" transform="rotate(30 34 20)"/>
+    <ellipse cx="24" cy="10" rx="5"  ry="7"  fill="#bbf7d0" opacity="0.8"/>
+    <ellipse cx="24" cy="30" rx="5"  ry="7"  fill="#bbf7d0" opacity="0.8"/>
+    <circle  cx="24" cy="20" r="5"   fill="#4ade80"/>
+  </svg>
+</div>
+
+<!-- Grass bar -->
+<svg class="grass-bar" viewBox="0 0 1440 60" preserveAspectRatio="none">
+  <path d="M0,40 Q30,10 60,35 Q90,10 120,35 Q150,5 180,35 Q210,12 240,35 Q270,8 300,35 Q330,15 360,35 Q390,5 420,35 Q450,10 480,35 Q510,5 540,35 Q570,10 600,35 Q630,5 660,35 Q690,10 720,35 Q750,5 780,35 Q810,12 840,35 Q870,5 900,35 Q930,15 960,35 Q990,5 1020,35 Q1050,12 1080,35 Q1110,5 1140,35 Q1170,10 1200,35 Q1230,5 1260,35 Q1290,12 1320,35 Q1350,5 1380,35 Q1410,10 1440,35 L1440,60 L0,60 Z" fill="#52b788" opacity="0.5"/>
+  <path d="M0,45 Q20,20 40,42 Q60,15 80,42 Q100,20 120,42 Q140,12 160,42 Q180,22 200,42 Q220,10 240,42 Q260,22 280,42 Q300,8 320,42 Q340,18 360,42 Q380,10 400,42 Q420,20 440,42 Q460,5 480,42 Q500,18 520,42 Q540,10 560,42 Q580,20 600,42 Q620,5 640,42 Q660,18 680,42 Q700,10 720,42 Q740,20 760,42 Q780,5 800,42 Q820,18 840,42 Q860,10 880,42 Q900,20 920,42 Q940,5 960,42 Q980,18 1000,42 Q1020,10 1040,42 Q1060,20 1080,42 Q1100,5 1120,42 Q1140,18 1160,42 Q1180,10 1200,42 Q1220,20 1240,42 Q1260,5 1280,42 Q1300,18 1320,42 Q1340,10 1360,42 Q1380,20 1400,42 Q1420,5 1440,42 L1440,60 L0,60 Z" fill="#40916c" opacity="0.7"/>
+</svg>
+
+<!-- Butterfly -->
+<div class="butterfly" style="top:20%;left:10%;animation-duration:12s;">
+  <svg width="40" height="30" viewBox="0 0 40 30">
+    <ellipse cx="10" cy="12" rx="10" ry="8" fill="#fda4af" opacity="0.85" transform="rotate(-20 10 12)"/>
+    <ellipse cx="30" cy="12" rx="10" ry="8" fill="#fda4af" opacity="0.85" transform="rotate(20 30 12)"/>
+    <ellipse cx="10" cy="22" rx="7" ry="5" fill="#f9a8d4" opacity="0.7" transform="rotate(15 10 22)"/>
+    <ellipse cx="30" cy="22" rx="7" ry="5" fill="#f9a8d4" opacity="0.7" transform="rotate(-15 30 22)"/>
+    <ellipse cx="20" cy="15" rx="2" ry="8" fill="#1b4332"/>
+  </svg>
+</div>
+<div class="butterfly" style="top:35%;right:15%;animation-duration:16s;animation-delay:-5s;">
+  <svg width="32" height="24" viewBox="0 0 40 30">
+    <ellipse cx="10" cy="12" rx="10" ry="8" fill="#bfdbfe" opacity="0.85" transform="rotate(-20 10 12)"/>
+    <ellipse cx="30" cy="12" rx="10" ry="8" fill="#bfdbfe" opacity="0.85" transform="rotate(20 30 12)"/>
+    <ellipse cx="10" cy="22" rx="7" ry="5" fill="#93c5fd" opacity="0.7" transform="rotate(15 10 22)"/>
+    <ellipse cx="30" cy="22" rx="7" ry="5" fill="#93c5fd" opacity="0.7" transform="rotate(-15 30 22)"/>
+    <ellipse cx="20" cy="15" rx="2" ry="8" fill="#1b4332"/>
+  </svg>
+</div>
+
+<div class="branding" style="position:relative;z-index:10;">
+  <div class="branding-title">🌸 DataUp <span class="glow">Swag Quiz</span> 🌿</div>
+  <div class="branding-sub">✦ True or False · 6 Questions ✦</div>
+</div>
+
+<div class="card" id="app"></div>
+<div class="footer">🌼 &nbsp; DataUp Challenge &nbsp; 🌼</div>
+
+<script>
+// ── Supabase ─────────────────────────────────────────────────────────────────
+const SUPABASE_URL = "https://ogqajdwdwlqgcqqegxgq.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9ncWFqZHdkd2xxZ2NxcWVneGdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY4NTg4OTUsImV4cCI6MjA5MjQzNDg5NX0.sp-icGlD6AxqVCDOEfjLGt-XYN98YrLQn5yn6R5mNVI";
+
+async function submitScore(){
+  try {
+    const details = QUESTIONS.map((q,i) =>
+      (results[i] ? '[CORRECT]' : '[WRONG]') + ' [' + q.team + '] ' + q.text.slice(0,80)
+    ).join(' | ');
+    const res = await fetch(SUPABASE_URL + "/rest/v1/dataup_swag_scores", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_KEY,
+        "Authorization": "Bearer " + SUPABASE_KEY,
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({ name: userName, score, total: TOTAL, details })
+    });
+    const el = document.getElementById('saving-status');
+    if(el) el.textContent = res.ok ? "🌸 Score saved!" : "";
+  } catch {}
+}
+
+// ── Quiz Data (from dataupswagquiz.csv) ─────────────────────────────────────
+const QUESTIONS = [
+  {
+    team: "BBT",
+    text: "From AI usage patterns and adoption trends in 2025, adoption patterns were evenly distributed across gender and age groups.",
+    answer: false,
+    explanation: "Adoption patterns were NOT evenly distributed — significant differences were observed across gender and age groups."
+  },
+  {
+    team: "Digital Realists",
+    text: "In finding out practical AI adoption across Info Group, Employees with advanced AI proficiency are evenly spread across all user archetypes.",
+    answer: false,
+    explanation: "Advanced AI proficiency was NOT evenly spread — it was concentrated within certain user archetypes."
+  },
+  {
+    team: "Power AI",
+    text: "In finding out whether AI talent and jobs in Singapore are powerful enough to keep us ahead, Uneven talent pipelines and pay distribution are among the factors limiting Singapore's overall AI position.",
+    answer: true,
+    explanation: "TRUE — Uneven talent pipelines and pay distribution were identified as key limiting factors for Singapore's AI competitiveness."
+  },
+  {
+    team: "Razor-sharp Dashboard Detectives",
+    text: "In assessing AI adoption, readiness, challenges and support needs across Singapore businesses to design targeted AI adoption over the next 2–3 years, funding constraints are one of the key barriers affecting AI adoption among businesses.",
+    answer: true,
+    explanation: "TRUE — Funding constraints were found to be one of the key barriers affecting AI adoption among Singapore businesses."
+  },
+  {
+    team: "Rigorous Data Dashboarders",
+    text: "In understanding how Singapore residents' views and participation in AI upskilling courses can support workforce AI adoption, the dashboard also examined whether upskilling could improve workers' income.",
+    answer: false,
+    explanation: "FALSE — The dashboard did not examine the relationship between upskilling and workers' income."
+  },
+  {
+    team: "Tech Tag!",
+    text: "In examining how job postings have evolved since 2020, educational qualifications and credentials appear to matter now more than ever.",
+    answer: false,
+    explanation: "FALSE — The findings did not conclude that educational qualifications and credentials matter more now than ever in job postings since 2020."
+  }
+];
+
+const TOTAL = QUESTIONS.length;
+let current = 0, score = 0, answered = false, results = [], userName = "";
+
+function init(){ current=0; score=0; answered=false; results=[]; userName=""; renderName(); }
+
+function renderName(){
+  document.getElementById('app').innerHTML = `
+    <div class="animate">
+      <div class="name-hero">
+        <span class="hero-icon">🌸</span>
+        <h2>DataUp Swag Quiz</h2>
+        <p>${TOTAL} True or False questions · Can you get them all right?</p>
+        <div style="margin-top:16px;padding:14px 18px;background:linear-gradient(135deg,#fff9c4,#fffde7);border:2px solid #fbbf24;border-radius:16px;font-size:0.9rem;font-weight:800;color:#92400e;line-height:1.55;">
+          🎁 Answer all 6 Questions Correctly to redeem an exclusive <span style="color:#b45309;">DataUp Swag!</span><br/>
+          <span style="font-weight:700;color:#a16207;font-size:0.82rem;">⚡ Limited quantities — while stocks last!</span>
+        </div>
+      </div>
+      <div class="input-wrap">
+        <label for="nameInput">🌿 Enter your name to begin</label>
+        <input id="nameInput" type="text" placeholder="e.g. Jane Tan" autocomplete="off"
+          oninput="document.getElementById('startBtn').disabled=this.value.trim().length<2"
+          onkeydown="if(event.key==='Enter'&&this.value.trim().length>=2)startQuiz()"/>
+      </div>
+      <button class="start-btn" id="startBtn" disabled onclick="startQuiz()">🚀 Start Quiz</button>
+    </div>`;
+  document.getElementById('nameInput').focus();
+}
+
+function startQuiz(){
+  userName = document.getElementById('nameInput').value.trim();
+  if(!userName) return;
+  current=0; score=0; answered=false; results=[];
+  renderQ();
+}
+
+function renderQ(){
+  const q = QUESTIONS[current];
+  const pct = Math.round((current / TOTAL) * 100);
+  answered = false;
+  document.getElementById('app').innerHTML = `
+    <div class="animate">
+      <div class="quiz-header">
+        <span class="quiz-title">🌸 DataUp Swag Quiz</span>
+        <span class="quiz-counter">${current+1} / ${TOTAL}</span>
+      </div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>
+      <span class="team-badge">🏆 ${q.team}</span>
+      <div class="q-text">${q.text}</div>
+      <div class="tf-options">
+        <button class="tf-btn true-btn"  id="btn-true"  onclick="selectAnswer(true)">✓ &nbsp;TRUE</button>
+        <button class="tf-btn false-btn" id="btn-false" onclick="selectAnswer(false)">✗ &nbsp;FALSE</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+      <div class="action-btns">
+        <button class="next-btn" id="next-btn" onclick="nextQ()">${current < TOTAL-1 ? 'Next Question →' : 'See My Results →'}</button>
+      </div>
+    </div>`;
+}
+
+function selectAnswer(chosen){
+  if(answered) return;
+  answered = true;
+  const q = QUESTIONS[current];
+  const isCorrect = (chosen === q.answer);
+  const btnTrue  = document.getElementById('btn-true');
+  const btnFalse = document.getElementById('btn-false');
+  const fb       = document.getElementById('feedback');
+  const box      = document.getElementById('answer-box');
+
+  btnTrue.disabled  = true;
+  btnFalse.disabled = true;
+
+  if(isCorrect){
+    (chosen ? btnTrue : btnFalse).classList.add('correct');
+    fb.innerHTML = '🎉 Yay, you got it right!';
+    fb.className = 'feedback correct-msg';
+    score++;
+    results.push(true);
+  } else {
+    (chosen  ? btnTrue  : btnFalse).classList.add('wrong');
+    (!chosen ? btnTrue  : btnFalse).classList.add('reveal');
+    fb.innerHTML = `❌ Wrong, try again next round! The answer was <strong>${q.answer ? 'TRUE' : 'FALSE'}</strong>.`;
+    fb.className = 'feedback wrong-msg';
+    results.push(false);
+  }
+
+  document.getElementById('next-btn').style.display = 'inline-block';
+}
+
+function nextQ(){ current++; if(current < TOTAL) renderQ(); else renderResult(); }
+
+function launchConfetti(){
+  const cv = document.getElementById('confetti-canvas'), cx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const cols = ['#f9a8d4','#fbbf24','#34d399','#60a5fa','#a78bfa','#fcd34d','#86efac','#fda4af'];
+  const pieces = Array.from({length:180},()=>({
+    x:Math.random()*cv.width, y:-20,
+    vx:(Math.random()-0.5)*5, vy:2+Math.random()*4,
+    r:4+Math.random()*7, col:cols[Math.floor(Math.random()*cols.length)],
+    rot:Math.random()*360, rotV:(Math.random()-0.5)*8, alpha:1
+  }));
+  let frame = 0;
+  (function draw(){
+    cx.clearRect(0,0,cv.width,cv.height);
+    pieces.forEach(p=>{
+      cx.save(); cx.globalAlpha=p.alpha; cx.translate(p.x,p.y); cx.rotate(p.rot*Math.PI/180);
+      cx.fillStyle=p.col; cx.fillRect(-p.r/2,-p.r/2,p.r,p.r*0.6); cx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.rotV; p.vy+=0.07;
+      if(p.y>cv.height*0.75) p.alpha-=0.012;
+    });
+    frame++;
+    if(frame<300) requestAnimationFrame(draw); else cx.clearRect(0,0,cv.width,cv.height);
+  })();
+}
+
+function renderResult(){
+  const pct = score / TOTAL;
+  let rClass, msg, emoji, rc;
+  if(score === TOTAL){ rClass='score-perfect'; msg=`Flawless, ${userName}! You know it all!`;     emoji='🌸'; rc='#40916c'; launchConfetti(); }
+  else if(pct >= 0.5){ rClass='score-good';    msg=`Nice work, ${userName}! Keep growing! 🌱`;    emoji='🌿'; rc='#14b8a6'; }
+  else               { rClass='score-low';     msg=`Keep learning, ${userName}! You'll bloom! 🌼`; emoji='🐣'; rc='#ef4444'; }
+
+  const rp = `${Math.round(pct*360)}deg`;
+  const rev = QUESTIONS.map((q,i) => `
+    <div class="review-item ${results[i]?'correct-item':'wrong-item'}">
+      <div class="review-icon">${results[i]?'✅':'❌'}</div>
+      <div>
+        <div class="q-label-rv">${q.text.slice(0,90)}${q.text.length>90?'…':''}
+          <span class="team-badge" style="font-size:0.6rem;padding:2px 8px;margin-left:5px;">${q.team}</span>
+        </div>
+        <div class="correct-a-rv">✓ ${q.answer ? 'TRUE' : 'FALSE'}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('app').innerHTML = `
+    <div class="animate result">
+      <div style="font-size:3rem;margin-bottom:8px;">${emoji}</div>
+      <div class="score-ring ${rClass}" style="--rc:${rc};--rp:${rp};">
+        <div class="score-ring-inner"><span>${score}/${TOTAL}</span><span class="score-label">Score</span></div>
+      </div>
+      <h2>${msg}</h2>
+      <p class="result-sub">You scored <strong>${score} out of ${TOTAL}</strong> correct.</p>
+      <div style="font-size:0.78rem;color:#74c69d;margin-bottom:16px;font-weight:700;" id="saving-status">Saving your score… 🌿</div>
+      ${score === TOTAL ? `
+      <div style="margin-bottom:22px;padding:20px 22px;background:linear-gradient(135deg,#fff9c4,#fffde7);border:2.5px solid #fbbf24;border-radius:18px;text-align:center;">
+        <div style="font-size:1.6rem;margin-bottom:6px;">🎁</div>
+        <div style="font-size:1rem;font-weight:900;color:#92400e;margin-bottom:6px;">Congratulations, ${userName}!</div>
+        <div style="font-size:0.9rem;font-weight:700;color:#b45309;line-height:1.6;">
+          Please show this page to the<br/>
+          <span style="font-size:1.05rem;color:#92400e;background:#fde68a;padding:2px 10px;border-radius:8px;">📍 DataUp Redemption Counter</span><br/>
+          to redeem your <strong>DataUp Exclusive Swag!</strong>
+        </div>
+      </div>` : `
+      <div style="margin-bottom:22px;padding:16px 20px;background:#fff0f0;border:2px solid #fca5a5;border-radius:16px;text-align:center;">
+        <div style="font-size:1.3rem;margin-bottom:4px;">😅</div>
+        <div style="font-size:0.95rem;font-weight:800;color:#dc2626;">Try again!</div>
+        <div style="font-size:0.85rem;font-weight:700;color:#b91c1c;margin-top:4px;">Score 6/6 to redeem your swag!</div>
+      </div>`}
+      <button class="retry-btn" onclick="init()">🔄 Try Again</button>
+      <div class="review"><h3>✦ Answer Review</h3>${rev}</div>
+      <button class="retry-btn" style="margin-top:8px;" onclick="init()">🔄 Play Again</button>
+    </div>`;
+  submitScore();
+}
+
+init();
+</script>
+</body>
+</html>
